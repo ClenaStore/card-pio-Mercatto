@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mercatto Delícia — Cardápio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1220; --paper:#0e172a; --ink:#e6eefc; --muted:#a8b3c7; --line:#1e293b;
+  --brand:#06b6d4; --accent:#86efac; --danger:#ef4444; --gold:#f59e0b; --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:radial-gradient(1200px 700px at 20% -10%, #11203b 0%, #0b1220 45%, #050914 100%) fixed;
+  color:var(--ink); font-family:Inter,system-ui,Segoe UI,Roboto,Arial; -webkit-font-smoothing:antialiased
+}
+
+/* Topbar */
+.topbar{
+  position:fixed; inset:16px 16px auto 16px; display:flex; gap:12px; align-items:center; z-index:30;
+  background:rgba(7,12,24,.6); border:1px solid rgba(255,255,255,.06); backdrop-filter:blur(8px);
+  padding:10px 12px; border-radius:14px; box-shadow:var(--shadow)
+}
+.logo{
+  display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.3px;
+}
+.logo .dot{width:10px; height:10px; border-radius:50%; background:linear-gradient(145deg,#06b6d4,#22d3ee)}
+.logo h1{font-size:15px; margin:0}
+.search{
+  margin-left:auto; position:relative; width:min(380px,40vw)
+}
+.search input{
+  width:100%; padding:10px 36px 10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.09);
+  background:rgba(255,255,255,.04); color:var(--ink); outline:none
+}
+.search svg{position:absolute; right:10px; top:50%; transform:translateY(-50%); opacity:.6}
+
+/* Stage & Book */
+.stage{
+  height:100%; display:grid; place-items:center; padding:80px 16px 32px
+}
+.book{
+  position:relative; width:min(1100px,92vw); height:min(740px,78vh);
+  perspective:2000px; user-select:none; filter:drop-shadow(0 35px 60px rgba(0,0,0,.45));
+}
+.page{
+  position:absolute; top:0; width:50%; height:100%; background:
+    linear-gradient(180deg, #0f1b31 0%, #0e172a 60%, #0b1424 100%);
+  border:1px solid rgba(255,255,255,.06);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
+  transform-origin:left; transition:transform .9s cubic-bezier(.19,1,.22,1), z-index .9s;
+  will-change:transform;
+}
+.page.right{ left:50%; transform-origin:left; }
+.page.left{ left:0; transform-origin:right; }
+.page .paper{
+  position:absolute; inset:0; padding:26px 22px; overflow:auto; scrollbar-width:thin;
+}
+.paper::-webkit-scrollbar{height:8px; width:8px}
+.paper::-webkit-scrollbar-thumb{background:#1f2a44; border-radius:8px}
+
+/* Page states */
+.page.is-turned{
+  transform:rotateY(-180deg);
+  z-index:2;
+}
+.page.right:not(.is-turned){z-index:3}
+.page.left{ transform-origin:right }
+
+/* Controls */
+.controls{
+  position:absolute; inset:auto 0 8px 0; display:flex; justify-content:center; gap:10px; z-index:25;
+}
+.btn{
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+  color:var(--ink); padding:10px 14px; border-radius:12px; cursor:pointer;
+  display:inline-flex; gap:8px; align-items:center; transition:.2s;
+}
+.btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.12)}
+.btn:active{transform:translateY(0)}
+
+/* Cover */
+.cover{
+  display:grid; place-items:center; height:100%; padding:14px;
+  background:
+    radial-gradient(800px 400px at 40% -10%, rgba(255,255,255,.08), transparent 50%),
+    linear-gradient(140deg,#0f172a 30%,#0a1120 60%);
+  border:1px dashed rgba(255,255,255,.08);
+  border-radius:12px;
+}
+.cover .capabox{
+  width:100%; height:60%; border-radius:16px; border:1px dashed rgba(255,255,255,.18);
+  background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.01));
+  display:grid; place-items:center; position:relative; overflow:hidden;
+}
+.cover .capabox img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.9}
+.cover h2{margin:10px 0 0; font-size:28px; letter-spacing:.4px}
+.small{font-size:12px; opacity:.7}
+
+/* Cards */
+.section-title{
+  font-weight:800; letter-spacing:.4px; margin:6px 0 14px; font-size:18px;
+  display:flex; align-items:center; gap:8px
+}
+.grid{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:12px;
+}
+.card{
+  background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+  border:1px solid rgba(255,255,255,.08); border-radius:14px; overflow:hidden; display:flex; gap:12px;
+}
+.thumb{
+  width:120px; height:100%; min-height:100px; background:#0a1222; position:relative; flex:0 0 120px;
+  display:grid; place-items:center; cursor:zoom-in;
+}
+.thumb img{width:100%; height:100%; object-fit:cover}
+.thumb .noimg{font-size:11px; color:var(--muted); text-align:center; padding:8px}
+.meta{padding:10px 10px 12px; display:flex; flex-direction:column; gap:8px}
+.name{font-weight:700}
+.desc{font-size:12px; color:var(--muted); line-height:1.4}
+.price{margin-top:auto; font-weight:800}
+.promo{color:var(--gold); font-weight:800; margin-left:8px}
+
+/* Modal (Promo + Gallery) */
+.modal{
+  position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.55);
+  backdrop-filter:blur(6px); z-index:100;
+}
+.modal.show{display:grid}
+.modal .box{
+  width:min(920px,92vw); max-height:86vh; background:linear-gradient(180deg,#0b1424,#0f1b31 60%,#0b1424);
+  border:1px solid rgba(255,255,255,.12); border-radius:16px; overflow:hidden; box-shadow:var(--shadow);
+}
+.modal .head{display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.08)}
+.modal .body{padding:14px; overflow:auto; max-height:70vh}
+.x{cursor:pointer; opacity:.8}
+
+/* Gallery carousel */
+.carousel{position:relative; aspect-ratio:16/9; background:#0a1222; display:grid; place-items:center; border-radius:12px; overflow:hidden}
+.carousel img, .carousel video{width:100%; height:100%; object-fit:cover}
+.carousel .nav{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between; pointer-events:none
+}
+.carousel button{
+  pointer-events:auto; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.2);
+  color:white; padding:8px 10px; border-radius:10px; margin:0 8px; cursor:pointer
+}
+.carousel .dots{position:absolute; bottom:8px; left:50%; transform:translateX(-50%); display:flex; gap:6px}
+.carousel .dot{width:8px; height:8px; border-radius:10px; background:rgba(255,255,255,.35)}
+.carousel .dot.is{background:white}
+
+/* Badges */
+.badge{font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); color:var(--muted)}
+.badge.brand{border-color:rgba(45,212,191,.35); color:#a7f3d0}
+
+/* Responsive */
+@media (max-width:960px){
+  .grid{grid-template-columns:1fr}
+  .thumb{width:100px; min-height:90px}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="dot"></div>
+    <h1>Mercatto Delícia — Cardápio</h1>
+    <span class="badge brand">folhear como livro</span>
+  </div>
+  <div class="search">
+    <input id="search" type="search" placeholder="Pesquisar prato, ingrediente ou preço…" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="1.6"/></svg>
+  </div>
+</div>
+
+<!-- STAGE / BOOK -->
+<div class="stage">
+  <div id="book" class="book"><!-- páginas criadas por JS --></div>
+  <div class="controls">
+    <button class="btn" id="prevBtn" title="Página anterior">◀ Anterior</button>
+    <button class="btn" id="nextBtn" title="Próxima página">Próxima ▶</button>
+  </div>
+</div>
+
+<!-- MODAL DE PROMOÇÕES (Banner de entrada) -->
+<div id="modalPromo" class="modal">
+  <div class="box">
+    <div class="head">
+      <strong>Promoções de hoje</strong>
+      <span class="x" data-close="modalPromo">✕</span>
+    </div>
+    <div class="body" id="promoContent">
+      <!-- preenchido via JS -->
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DE GALERIA -->
+<div id="modalGallery" class="modal">
+  <div class="box">
+    <div class="head">
+      <strong id="galleryTitle">Galeria</strong>
+      <span class="x" data-close="modalGallery">✕</span>
+    </div>
+    <div class="body">
+      <div class="carousel">
+        <div id="carouselViewport"></div>
+        <div class="nav">
+          <button id="gPrev">◀</button>
+          <button id="gNext">▶</button>
+        </div>
+        <div id="dots" class="dots"></div>
+      </div>
+      <div style="margin-top:10px; font-size:12px; color:var(--muted)">
+        <!-- Local para vídeos, se houver -->
+        <!--
+          Se quiser usar vídeos, adicione URLs em item.videos (MP4/WEBM).
+          O carrossel exibe imagens e vídeos juntos respeitando a ordem.
+        -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== DADOS DO CARDÁPIO ===================== */
+/* Observação:
+   - Preencha "images" com URLs de fotos (pode ser base64/data URI ou caminho local).
+   - Se "images" estiver vazio, o card lista só nome/descrição/valor (sem thumb).
+   - Para vídeos, adicione URLs em "videos" (ex.: MP4/WEBM). O carrossel já suporta.
+   - Marque promoções com "promo:true" e/ou "promoPrice".
+*/
+const MENU = [
+  {
+    category: "Pratos Executivos (11h–15h)",
+    items: [
+      { name:"Picanha Angus 200g", desc:"Escolha 2 acompanhamentos.", price:"74,90", images:[], videos:[], promo:false },
+      { name:"Salmão 200g", desc:"Escolha 2 acompanhamentos.", price:"69,90", images:[], videos:[], promo:true, promoPrice:"64,90" },
+      { name:"Ancho 200g", desc:"Escolha 2 acompanhamentos.", price:"69,90", images:[], videos:[], promo:false },
+      { name:"Chorizo Angus 200g", desc:"Escolha 2 acompanhamentos.", price:"59,90", images:[], videos:[], promo:false },
+      { name:"Tilápia 200g", desc:"Escolha 2 acompanhamentos.", price:"54,90", images:[], videos:[], promo:false },
+      { name:"Supremo de Frango 200g", desc:"Escolha 2 acompanhamentos.", price:"49,90", images:[], videos:[], promo:true, promoPrice:"46,90" },
+      { name:"Parmegiana de Frango Italiano", desc:"Acrescido fettuccine pomodoro.", price:"54,90", images:[], videos:[], promo:false },
+      { name:"Parmegiana de Filé Mignon", desc:"Arroz branco e purê de batata cremoso.", price:"59,90", images:[], videos:[], promo:false },
+    ]
+  },
+  {
+    category: "Entradas / Saladas",
+    items: [
+      { name:"Tábua de Frios", desc:"Curadoria de queijos nobres, frios e acompanhamentos.", price:"195,00", images:[], videos:[], promo:false },
+      { name:"Carpaccio de Carne Angus", desc:"Lâminas finas com flor de sal, azeite trufado e chips.", price:"79,90", images:[], videos:[], promo:false },
+      { name:"Burrata ao Forno", desc:"Tomates confitados e pesto, com torradas francesas.", price:"82,90", images:[], videos:[], promo:true, promoPrice:"79,90" },
+      { name:"Provolone Crocante", desc:"Empanado panko com melado de cana e ervas.", price:"79,90", images:[], videos:[], promo:false },
+      { name:"Salada do Mercatto", desc:"Mix de folhas, frutos do mar e molho de limão siciliano.", price:"89,00", images:[], videos:[], promo:false },
+    ]
+  },
+  {
+    category: "Petiscos",
+    items: [
+      { name:"Mix Mercatto", desc:"Costelinha BBQ, iscas de peixe, filé ao gorgonzola e mais.", price:"182,90", images:[], videos:[], promo:false },
+      { name:"Camarão Alho e Óleo", desc:"Salteado no azeite com ervas.", price:"149,90", images:[], videos:[], promo:false },
+      { name:"Picanha com Bolinho de Mandioca", desc:"Picanha em palitos e bolinhos crocantes.", price:"119,90", images:[], videos:[], promo:false },
+      { name:"Iscas de Peixe", desc:"À milanesa com molho tártaro.", price:"82,90", images:[], videos:[], promo:true, promoPrice:"74,90" },
+      { name:"Batata-Frita Mercatto", desc:"Com cheddar e bacon.", price:"49,90", images:[], videos:[], promo:false },
+    ]
+  },
+  {
+    category: "Cortes Parrilla (Individuais)",
+    items: [
+      { name:"Ancho 350g", desc:"Marmoreio perfeito, brasa no ponto.", price:"90,00", images:[], videos:[], promo:false },
+      { name:"Bife Chorizo 350g", desc:"Clássico argentino, selado na brasa.", price:"85,00", images:[], videos:[], promo:false },
+      { name:"Picanha Angus 350g", desc:"Camada de gordura que derrete na grelha.", price:"99,00", images:[], videos:[], promo:false },
+      { name:"Prime Ribs 500g", desc:"Macio, com osso e sabor intenso.", price:"135,00", images:[], videos:[], promo:true, promoPrice:"129,00" },
+    ]
+  },
+  {
+    category: "Massas e Risotos",
+    items: [
+      { name:"Risoto de Filé Mignon", desc:"Lascas de queijo e crispy de alho-poró.", price:"59,90", images:[], videos:[], promo:false },
+      { name:"Risoto de Camarão", desc:"Crosta de parmesão.", price:"69,90", images:[], videos:[], promo:false },
+      { name:"Fettuccine Carbonara", desc:"Clássico italiano.", price:"59,90", images:[], videos:[], promo:false },
+      { name:"Spaghetti Frutos do Mar", desc:"Com crosta de limão siciliano.", price:"59,90", images:[], videos:[], promo:true, promoPrice:"56,90" },
+    ]
+  },
+  {
+    category: "Para Compartilhar",
+    items: [
+      { name:"Camarão Mercatto (2p)", desc:"Arroz, creme, presunto, ervilhas, alcaparras e camarões empanados.", price:"149,90", images:[], videos:[], promo:false },
+      { name:"Camarão Mercatto (4p)", desc:"Versão para 4 pessoas.", price:"219,90", images:[], videos:[], promo:false },
+      { name:"Picanha Fatiada (2p)", desc:"Com tropeiro, arroz, mandioca e vinagrete.", price:"169,90", images:[], videos:[], promo:false },
+      { name:"Picanha Fatiada (4p)", desc:"Servem 4 pessoas.", price:"249,90", images:[], videos:[], promo:false },
+    ]
+  },
+  {
+    category: "Sushi • Combinados",
+    items: [
+      { name:"Combinado Tóquio (20p)", desc:"4 sashimis salmão, 4 niguiris, 4 joy, 8 uramakis.", price:"104,90", images:[], videos:[], promo:false },
+      { name:"Combinado Kyoto (30p)", desc:"10 sashimis, 5 niguiris, 5 joy, 5 hot Philadelphia, 5 Ebi Tem.", price:"169,90", images:[], videos:[], promo:false },
+      { name:"Combinado Nigato (60p)", desc:"Experiência completa japonesa.", price:"319,90", images:[], videos:[], promo:false },
+    ]
+  },
+  {
+    category: "Pizzas Gourmet",
+    items: [
+      { name:"Calabrese Tradizionale", desc:"Molho artesanal, muçarela, calabresa, cebola roxa e orégano.", price:"106,90", images:[], videos:[], promo:false },
+      { name:"Filé Mignon com Gorgonzola", desc:"Cremosa e intensa.", price:"142,90", images:[], videos:[], promo:false },
+      { name:"Margherita Premium", desc:"San Marzano, muçarela fresca e manjericão.", price:"99,90", images:[], videos:[], promo:true, promoPrice:"92,90" },
+    ]
+  },
+  {
+    category: "Sobremesas",
+    items: [
+      { name:"Cheesecake de Goiaba com Queijo", desc:"Base crocante e cobertura de goiabada.", price:"49,90", images:[], videos:[], promo:false },
+      { name:"Petit Gâteau", desc:"Casquinha crocante e centro cremoso com sorvete.", price:"49,90", images:[], videos:[], promo:false },
+      { name:"Pudim Golden", desc:"Cremoso e dourado, derrete na boca.", price:"34,90", images:[], videos:[], promo:true, promoPrice:"29,90" },
+    ]
+  }
+];
+
+/* ===================== GERADOR DO LIVRO ===================== */
+
+const PAGES = []; // manter referência às páginas para o flip
+const bookEl = document.getElementById('book');
+
+function makePage(side, contentHTML){
+  const p = document.createElement('div');
+  p.className = 'page '+side;
+  p.innerHTML = `<div class="paper">${contentHTML}</div>`;
+  bookEl.appendChild(p);
+  PAGES.push(p);
+  return p;
+}
+
+function coverPage(){
+  return `
+    <div class="cover">
+      <div class="capabox" id="capabox">
+        <!-- Coloque sua capa aqui (substitua o src) -->
+        <!-- Exemplo: <img src="capa.jpg" alt="Capa Mercatto Delícia"> -->
+        <div class="small">Capa — clique duas vezes para enviar uma imagem</div>
+      </div>
+      <h2>Mercatto Delícia</h2>
+      <div class="small">Passe as páginas como em um livro</div>
+    </div>
+  `;
+}
+
+function sectionHTML(section){
+  const itemsHTML = section.items.map((it, idx)=>{
+    const hasImg = it.images && it.images.length;
+    const promo = it.promo && it.promoPrice;
+    return `
+      <div class="card" data-name="${it.name.toLowerCase()}" data-desc="${it.desc.toLowerCase()}" data-price="${it.price}">
+        <div class="thumb" ${hasImg?`data-gallery='${JSON.stringify({title:it.name, images:it.images||[], videos:it.videos||[]}).replaceAll("'","&#39;")}'`:""}>
+          ${hasImg?`<img src="${it.images[0]}" alt="${it.name}">`:`<div class="noimg">Sem foto<br/>—</div>`}
+        </div>
+        <div class="meta">
+          <div class="name">${it.name}</div>
+          <div class="desc">${it.desc}</div>
+          <div class="price">R$ ${it.price}${promo?` <span class="promo">• hoje ${it.promoPrice}</span>`:""}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  return `
+    <div class="section">
+      <div class="section-title">◆ ${section.category}</div>
+      <div class="grid">${itemsHTML}</div>
+    </div>
+  `;
+}
+
+function paginateSections(){
+  // Regras simples: capa ocupa a "left" inicial; conteúdos vão preenchendo páginas par a par.
+  makePage('left', coverPage());
+  let buffer = '';
+  let sideIsRight = true; // após capa, começa na direita
+  MENU.forEach(section=>{
+    const html = sectionHTML(section);
+    // se já tem conteúdo e adding esta seção ultrapassa ~altura, fecha página (heurística simples)
+    if(buffer.length > 12000){ // heurística; ajuste se tiver muito conteúdo
+      makePage(sideIsRight? 'right':'left', buffer);
+      buffer = '';
+      sideIsRight = !sideIsRight;
+    }
+    buffer += html;
+  });
+  if(buffer){
+    makePage('right', buffer);
+  }
+}
+
+paginateSections();
+
+/* ===================== FLIP (Navegação) ===================== */
+let current = 0; // índice da página visível "top" (direita não virada)
+function updatePages(){
+  PAGES.forEach((p, i)=>{
+    if(i <= current) p.classList.add('is-turned'); else p.classList.remove('is-turned');
+  });
+}
+updatePages();
+document.getElementById('nextBtn').onclick = ()=>{ if(current < PAGES.length-1){ current++; updatePages(); } };
+document.getElementById('prevBtn').onclick = ()=>{ if(current > 0){ current--; updatePages(); } };
+
+// Clique direto na página direita para virar
+bookEl.addEventListener('click', (e)=>{
+  const isRightTop = true; // interação simples: clique vira próxima
+  if(isRightTop) document.getElementById('nextBtn').click();
+});
+
+/* ===================== BUSCA ===================== */
+const searchEl = document.getElementById('search');
+searchEl.addEventListener('input', ()=>{
+  const q = searchEl.value.trim().toLowerCase();
+  document.querySelectorAll('.card').forEach(card=>{
+    const matches =
+      card.dataset.name.includes(q) ||
+      card.dataset.desc.includes(q) ||
+      card.dataset.price.includes(q);
+    card.style.display = matches ? '' : 'none';
+  });
+});
+
+/* ===================== GALERIA (IMAGENS/ VÍDEOS) ===================== */
+const modalGallery = document.getElementById('modalGallery');
+const viewport = document.getElementById('carouselViewport');
+const dots = document.getElementById('dots');
+const galleryTitle = document.getElementById('galleryTitle');
+
+let galleryMedia = []; // array de {type:'img'|'video', src}
+let gIndex = 0;
+
+function openGallery(payload){
+  const {title, images=[], videos=[]} = payload;
+  galleryTitle.textContent = title;
+  galleryMedia = [];
+  images.forEach(src => galleryMedia.push({type:'img', src}));
+  videos.forEach(src => galleryMedia.push({type:'video', src}));
+  gIndex = 0;
+  renderGallery();
+  modalGallery.classList.add('show');
+}
+function renderGallery(){
+  viewport.innerHTML = '';
+  dots.innerHTML = '';
+  if(!galleryMedia.length){
+    viewport.innerHTML = '<div style="padding:20px; color:var(--muted)">Sem mídia para exibir.</div>';
+    return;
+  }
+  const item = galleryMedia[gIndex];
+  if(item.type==='img'){
+    const img = document.createElement('img'); img.src = item.src; img.alt='media';
+    viewport.appendChild(img);
+  }else{
+    const v = document.createElement('video'); v.src = item.src; v.controls = true; v.autoplay = false;
+    viewport.appendChild(v);
+  }
+  galleryMedia.forEach((_,i)=>{
+    const d=document.createElement('div'); d.className='dot'+(i===gIndex?' is':'');
+    d.addEventListener('click',()=>{gIndex=i; renderGallery();});
+    dots.appendChild(d);
+  });
+}
+document.getElementById('gPrev').onclick = ()=>{ if(gIndex>0){gIndex--} else {gIndex=galleryMedia.length-1} renderGallery(); };
+document.getElementById('gNext').onclick = ()=>{ if(gIndex<galleryMedia.length-1){gIndex++} else {gIndex=0} renderGallery(); };
+
+// abrir a partir do thumb
+bookEl.addEventListener('click', (e)=>{
+  const t = e.target.closest('.thumb');
+  if(!t) return;
+  const data = t.getAttribute('data-gallery');
+  if(!data) return;
+  try{ openGallery(JSON.parse(data)); }catch(err){}
+});
+
+/* ===================== MODAIS (FECHAR) ===================== */
+document.querySelectorAll('.x').forEach(x=>{
+  x.addEventListener('click', ()=>{
+    const target = x.getAttribute('data-close');
+    if(target) document.getElementById(target).classList.remove('show');
+  });
+});
+[document.getElementById('modalPromo'), document.getElementById('modalGallery')].forEach(m=>{
+  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('show'); });
+});
+
+/* ===================== PROMOÇÕES (Banner de entrada) ===================== */
+function promoHTML(){
+  const promos = [];
+  MENU.forEach(sec=>sec.items.forEach(it=>{ if(it.promo){promos.push({...it, sec:sec.category})} }));
+  if(!promos.length) return '<div style="color:var(--muted)">Sem promoções hoje.</div>';
+  return `
+    <div class="grid">
+      ${promos.map(p=>`
+        <div class="card">
+          <div class="thumb">${(p.images&&p.images[0])?`<img src="${p.images[0]}">`:`<div class="noimg">Sem foto</div>`}</div>
+          <div class="meta">
+            <div class="name">${p.name} <span class="badge">${p.sec}</span></div>
+            <div class="desc">${p.desc}</div>
+            <div class="price">de R$ ${p.price} <span class="promo">por R$ ${p.promoPrice}</span></div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+// Mostra automático ao carregar
+window.addEventListener('load', ()=>{
+  document.getElementById('promoContent').innerHTML = promoHTML();
+  document.getElementById('modalPromo').classList.add('show');
+});
+
+/* ===================== CAPA (upload simples por duplo clique) ===================== */
+document.addEventListener('dblclick', (e)=>{
+  if(e.target.closest('#capabox')){
+    const input = document.createElement('input'); input.type='file'; input.accept='image/*';
+    input.onchange = ()=>{
+      const f = input.files[0]; if(!f) return;
+      const url = URL.createObjectURL(f);
+      const box = document.getElementById('capabox');
+      box.innerHTML = `<img src="${url}" alt="Capa">`;
+    };
+    input.click();
+  }
+});
+</script>
+</body>
+</html>
